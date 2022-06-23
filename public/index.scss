@@ -2,4 +2,23 @@
 @import "bootstrap/scss/functions";
 @import "bootstrap/scss/variables";
 
+$primary: $dark;
+
+$theme-colors: (
+    "primary": $primary
+);
+
 @import "bootstrap/scss/bootstrap";
+
+body {
+    font-family: Muli, sans-serif;
+
+    #title { 
+        //font-family: 'Times New Roman', Times, serif;
+        font-family: "Space Mono", monospace;
+    } 
+
+    .nav > .nav-link { color: $light !important; }
+    .nav > .nav-link.active { color: $dark !important; }
+}
+
