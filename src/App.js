@@ -1,4 +1,5 @@
 import React from 'react';
+import Chain from './Chain';
 import * as Covalent from './Covalent.js';
 import 'bootstrap-icons/font/bootstrap-icons.scss';
 import { ethers } from "ethers";
@@ -6,13 +7,15 @@ import { ethers } from "ethers";
 import * as Bootstrap from 'bootstrap';
 
 const MODE = { SEARCH: 0, RESULT: 1};
-const CHAIN_INFO = {
-  ETHER: {
-    id: '1',
-    scanUrl: 'https://etherscan.io/'
-  }
-};
-const NO_SCAN = '#';
+const CHAIN_LIST = [
+  new Chain('1', 'Ethereum', 18, 'https://etherscan.io', '/address/{0}', '/tx/{0}'),
+  new Chain('56', 'Binance', 18, 'https://bscscan.com', '/address/{0}', '/tx/{0}'),
+  new Chain('137', 'Polygon', 18, 'https://polygonscan.com', '/address/{0}', '/tx/{0}'),
+  new Chain('43114', 'Avalanche', 18, 'https://avascan.info', '/blockchain/c/address/{0}', '/blockchain/c/tx/{0}'),
+  new Chain('42161', 'Arbitrum', 18, 'https://arbiscan.com', '/address/{0}', '/tx/{0}'),
+  new Chain('1284', 'Moonbeam', 18, 'https://moonscan.io/', '/address/{0}', '/tx/{0}')
+];
+const NO_URL = '#';
 
 class App extends React.Component {
 
@@ -46,6 +49,7 @@ class App extends React.Component {
     let promise2 = Covalent.getTransactions(chain, address);
 
     Promise.all([promise1, promise2]).then(values => {
+      console.log(values[0].data)
       this.setState({ 
         tokens: values[0].data.items, 
         transactions: values[1].data.items,
@@ -76,43 +80,52 @@ class App extends React.Component {
       : <span className="badge bg-danger">Failure</span>;
   }
 
-  fees(value) {
+  round(value, precision = 5) {
+    return Number(value).toFixed(precision);
+  }
+
+  balance(value, decimals) {
     let bigNumberValue = ethers.utils.parseUnits(value, 0);
-    return ethers.utils.formatUnits(bigNumberValue);
+    return this.round(ethers.utils.formatUnits(bigNumberValue, decimals), 3);
   }
 
-  scanAddress(address) {
-    if (this.state.chainId === CHAIN_INFO.ETHER.id) {
-      return CHAIN_INFO.ETHER.scanUrl + 'address/' + address;
-    }
-    return NO_SCAN;
+  fees(chainId, value) {
+    let chain = CHAIN_LIST.find(c => c.id === chainId);
+    let bigNumberValue = ethers.utils.parseUnits(value, 0);
+    return this.round(ethers.utils.formatUnits(bigNumberValue, chain.decimal));
   }
 
-  scanTx(tx) {
-    if (this.state.chainId === CHAIN_INFO.ETHER.id) {
-      return CHAIN_INFO.ETHER.scanUrl + 'tx/' + tx;
+  scanAddrUrl(chainId, address) {
+    let chain = CHAIN_LIST.find(c => c.id === chainId);
+    if (chain) {
+      return String.format(chain.scanBase + chain.scanAddrUri, address);
     }
-    return NO_SCAN;
+    return NO_URL;
+  }
+
+  scanTxUrl(chainId, tx) {
+    let chain = CHAIN_LIST.find(c => c.id === chainId);
+    if (chain) {
+      return String.format(chain.scanBase + chain.scanTxUri, tx);
+    }
+    return NO_URL;
   }
 
   render() {
     return (
       <div className="container py-5">
         
-        <h1 id='title' className='mb-5'><i className="bi bi-card-list"></i> Crypto Portfolio</h1>
+        <h1 id='title' className='display-4 mb-5'><i className="bi bi-card-list"></i> Crypto Portfolio</h1>
         <form onSubmit={this.search} className="mb-5">
           <div className="mb-3">
-            <input type="text" id="input-address" className="form-control" placeholder="Enter portfolio address" autoComplete="off"/>
+            <input type="text" id="input-address" className="form-control form-control-lg" placeholder="Enter portfolio address" autoComplete="off"/>
           </div>
           <div className="mb-4">
             <label htmlFor="select-chain" className="form-label">Blockchain</label>
             <select id="select-chain" className="form-select" style={{ cursor: 'pointer' }}>
-                <option value="1">Ethereum</option>
-                <option value="56">Binance</option>
-                <option value="137">Polygon </option>
-                <option value="43114">Avalanche</option>
-                <option value="42161">Arbitrum</option>
-                <option value="1284">Moonbeam</option>
+            { CHAIN_LIST.map(chain => 
+              <option key={chain.id} value={chain.id}>{chain.name}</option>
+            ) }
             </select>
           </div>
           <button type="submit" className="btn btn-dark text-light border me-3"><i className="bi bi-search me-2"></i>Show</button>
@@ -146,9 +159,9 @@ class App extends React.Component {
                                 onError={ () => this.onImageError(index) }
                                 alt="" />
                         </td>
-                        <td className="fw-bold" style={{ width: '4rem' }}>{ token.contract_ticker_symbol }</td>
                         <td style={{ width: '10rem' }}>{ token.contract_name }</td>
-                        <td className='text-white-50'>${ token.quote }</td>
+                        <td style={{ width: '10rem' }}>${ this.round(token.quote, 2) }</td>
+                        <td className='text-white-50'>{ this.balance(token.balance, token.contract_decimals) } { token.contract_ticker_symbol }</td>
                       </tr>
                       ) }
                   </tbody>
@@ -173,10 +186,10 @@ class App extends React.Component {
                       <tr key={tx.tx_hash }>
                         <td><small className='text-white-50'>{ new Date(tx.block_signed_at).toLocaleString() }</small></td>
                         <td>{ this.status( tx.successful ) }</td>
-                        <td><a class="text-white" href={ this.scanTx( tx.tx_hash ) }>{ this.minimize( tx.tx_hash )}</a></td>
-                        <td>{ tx.from_address_label} <a class="text-white" href={ this.scanAddress( tx.from_address ) }>{ this.minimize( tx.from_address ) }</a></td>
-                        <td>{ tx.to_address_label}  <a class="text-white" href={ this.scanAddress( tx.to_address ) }>{ this.minimize( tx.to_address ) }</a></td>
-                        <td><small className='text-white-50'>{ this.fees(tx.fees_paid) }</small></td>
+                        <td><a className="text-white" href={ this.scanTxUrl( this.state.chainId, tx.tx_hash ) }>{ this.minimize( tx.tx_hash )}</a></td>
+                        <td>{ tx.from_address_label} <a className="text-white" href={ this.scanAddrUrl( this.state.chainId, tx.from_address ) }>{ this.minimize( tx.from_address ) }</a></td>
+                        <td>{ tx.to_address_label}  <a className="text-white" href={ this.scanAddrUrl( this.state.chainId, tx.to_address ) }>{ this.minimize( tx.to_address ) }</a></td>
+                        <td><small className='text-white-50'>{ this.fees( this.state.chainId, tx.fees_paid) }</small></td>
                       </tr>
                     ) }
                   </tbody>
@@ -187,7 +200,8 @@ class App extends React.Component {
         </>
         }
         <p className='text-danger'>{ this.state.error }</p>
-        <p className='text-center text-white fs-5 py-4'>Powered by : <a href="https://www.covalenthq.com/" className='text-white'>Covalent</a></p>
+        <hr/>
+        <p className='text-center text-white-50 fs-5 pt-2 pb-4'>Powered by : <a href="https://www.covalenthq.com/" className='text-white'>Covalent</a></p>
       </div>
     );
   }
