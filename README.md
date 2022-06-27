@@ -1,11 +1,11 @@
 # Covalent Portfolio
 This app is a crypto portfolio built with the Covalent API.
 
-The user selects a blockchain and enters his wallet address. The application displays the list of assets owned by this user and its last transactions.
+The user enters his wallet address and selects a blockchain. The application displays the list of assets owned by this user and its last transactions.
 
 Live site: https://covalent-portfolio.vercel.app
 
-Video demo:
+Video demo: https://youtu.be/_ROU1OpeANw
 
 The application uses the following Covalent endpoints:
 
