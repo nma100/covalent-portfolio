@@ -1,6 +1,6 @@
 import React from 'react';
 import Chain from './Chain';
-import * as Covalent from './Covalent.js';
+import * as Covalent from './Covalent';
 import 'bootstrap-icons/font/bootstrap-icons.scss';
 import { ethers } from "ethers";
 // eslint-disable-next-line 
@@ -118,7 +118,7 @@ class App extends React.Component {
         <h1 id='title' className='display-4 mb-5'><i className="bi bi-card-list"></i> Crypto Portfolio</h1>
         <form onSubmit={this.search} className="mb-5">
           <div className="mb-3">
-            <input type="text" id="input-address" className="form-control form-control-lg" placeholder="Enter portfolio address" autoComplete="off"/>
+            <input type="text" id="input-address" className="form-control form-control-lg" placeholder="Wallet address" autoComplete="off"/>
           </div>
           <div className="mb-4">
             <label htmlFor="select-chain" className="form-label">Blockchain</label>
@@ -128,7 +128,7 @@ class App extends React.Component {
             ) }
             </select>
           </div>
-          <button type="submit" className="btn btn-dark text-light border me-3"><i className="bi bi-search me-2"></i>Show</button>
+          <button type="submit" className="btn btn-dark text-light border me-3"><i className="bi bi-search me-2"></i>Show Portfolio</button>
 
           {this.state.searching &&
           <div className="spinner-border spinner-border-sm text-light" role="status">
@@ -201,7 +201,7 @@ class App extends React.Component {
         }
         <p className='text-danger'>{ this.state.error }</p>
         <hr/>
-        <p className='text-center text-white-50 fs-5 pt-2 pb-4'>Powered by : <a href="https://www.covalenthq.com/" className='text-white'>Covalent</a></p>
+        <p className='text-center text-white-50 fs-4 pt-2 pb-4'>Powered by : <a href="https://www.covalenthq.com/" className='text-white'>Covalent</a></p>
       </div>
     );
   }
